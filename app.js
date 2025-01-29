@@ -1,36 +1,35 @@
 import express from "express";
+import collection from "./mongo.js";
 import cors from "cors";
 import dotenv from "dotenv";
-import bcrypt from "bcrypt";
-import collection from "./mongo.js";
 
-// Load environment variables
-dotenv.config();
+dotenv.config(); // Load .env variables
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173", // Update with your Vercel frontend URL
-    credentials: true
-}));
+app.use(cors());
 
-// Routes
 app.get("/", (req, res) => {
     res.send("Welcome to The Hunter's Tavern API!");
 });
 
 app.post("/Login", async (req, res) => {
     const { email, password } = req.body;
+
     try {
-        const user = await collection.findOne({ email });
-        if (!user) return res.status(404).json({ message: "notexist" });
+        const check = await collection.findOne({ email });
 
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.status(401).json({ message: "wrong-password" });
-
-        res.status(200).json({ message: "exist", userName: user.userName });
+        if (check) {
+            if (check.password === password) {
+                res.status(200).json({ message: "exist", userName: check.userName });
+            } else {
+                res.status(401).json({ message: "wrong-password" });
+            }
+        } else {
+            res.status(404).json({ message: "notexist" });
+        }
     } catch (e) {
         res.status(500).json({ message: "fail" });
     }
@@ -38,25 +37,28 @@ app.post("/Login", async (req, res) => {
 
 app.post("/Sign-up", async (req, res) => {
     const { email, userName, password } = req.body;
+
+    const data = { email, userName, password };
+
     try {
         const checkEmail = await collection.findOne({ email });
         const checkUserName = await collection.findOne({ userName });
 
-        if (checkEmail) return res.json("exist");
-        if (checkUserName) return res.json("username-exists");
-
-        // Hash password before storing
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await collection.create({ email, userName, password: hashedPassword });
-
-        res.json("signup-success");
+        if (checkEmail) {
+            res.json("exist");
+        } else if (checkUserName) {
+            res.json("username-exists");
+        } else {
+            await collection.create(data);
+            res.json("signup-success");
+        }
     } catch (e) {
         res.status(500).json("fail");
     }
 });
 
-// Use dynamic port for deployment
-const PORT = process.env.PORT || 7001;
+const PORT = 7001;
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
