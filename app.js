@@ -9,7 +9,11 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+    origin: "https://hunters-tavern-1hz0td9hc-joellkebrets-projects.vercel.app", // Allow frontend
+    methods: ["GET", "POST"],
+    credentials: true
+}));
 
 app.get("/", (req, res) => {
     res.send("Welcome to The Hunter's Tavern API!");
@@ -57,8 +61,8 @@ app.post("/Sign-up", async (req, res) => {
     }
 });
 
-const PORT = 7001;
+const PORT = process.env.PORT || 7001;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
