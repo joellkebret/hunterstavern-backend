@@ -2,6 +2,7 @@ import express from "express";
 import collection from "./mongo.js";
 import cors from "cors";
 import dotenv from "dotenv";
+import bcrypt from "bcryptjs"; // ✅ Import bcrypt for password hashing
 
 dotenv.config(); // Load .env variables
 
@@ -10,7 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-    origin: "https://hunters-tavern-1hz0td9hc-joellkebrets-projects.vercel.app", // Allow frontend
+    origin: "https://hunters-tavern-1hz0td9hc-joellkebrets-projects.vercel.app",
     methods: ["GET", "POST"],
     credentials: true
 }));
@@ -19,6 +20,7 @@ app.get("/", (req, res) => {
     res.send("Welcome to The Hunter's Tavern API!");
 });
 
+// ✅ Fixed Login API: Compare Hashed Passwords
 app.post("/Login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -26,7 +28,9 @@ app.post("/Login", async (req, res) => {
         const check = await collection.findOne({ email });
 
         if (check) {
-            if (check.password === password) {
+            // ✅ Compare hashed password
+            const isMatch = await bcrypt.compare(password, check.password);
+            if (isMatch) {
                 res.status(200).json({ message: "exist", userName: check.userName });
             } else {
                 res.status(401).json({ message: "wrong-password" });
@@ -39,10 +43,9 @@ app.post("/Login", async (req, res) => {
     }
 });
 
+// ✅ Fixed Signup API: Hash Password Before Storing
 app.post("/Sign-up", async (req, res) => {
     const { email, userName, password } = req.body;
-
-    const data = { email, userName, password };
 
     try {
         const checkEmail = await collection.findOne({ email });
@@ -53,6 +56,10 @@ app.post("/Sign-up", async (req, res) => {
         } else if (checkUserName) {
             res.json("username-exists");
         } else {
+            // ✅ Hash the password before saving
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const data = { email, userName, password: hashedPassword };
+
             await collection.create(data);
             res.json("signup-success");
         }
