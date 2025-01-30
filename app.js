@@ -44,7 +44,7 @@ app.post("/Login", async (req, res) => {
 });
 
 // ✅ Signup Route (Uses 'app' after it is declared)
-app.post("/Sign-up", async (req, res) => {
+app.post("/Sign-up", async (req, res) => {  // ✅ Must be POST, not GET
     const { email, userName, password } = req.body;
 
     try {
@@ -56,7 +56,6 @@ app.post("/Sign-up", async (req, res) => {
         } else if (checkUserName) {
             res.json("username-exists");
         } else {
-            // ✅ Hash the password before saving
             const hashedPassword = await bcrypt.hash(password, 10);
             const data = { email, userName, password: hashedPassword };
 
