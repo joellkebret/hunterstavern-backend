@@ -11,7 +11,7 @@ const app = express(); // ✅ Ensure 'app' is declared before using it
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-    origin: "https://hunters-tavern-1hz0td9hc-joellkebrets-projects.vercel.app",
+    origin: "https://hunters-tavern-l8z8u9rhq-joellkebrets-projects.vercel.app",
     methods: ["GET", "POST"],
     credentials: true
 }));
